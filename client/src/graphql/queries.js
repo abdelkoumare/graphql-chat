@@ -21,15 +21,34 @@ const addMessageMutation = gql`
   }
 `;
 
+const messageAddedSubscription = gql`
+  subscription {
+    messageAdded {
+      id
+      from
+      text
+    }
+  }
+`;
+
 export async function addMessage(text) {
-  const {data} = await client.mutate({
+  const { data } = await client.mutate({
     mutation: addMessageMutation,
-    variables: {input: {text}}
+    variables: { input: { text } },
   });
   return data.message;
 }
 
 export async function getMessages() {
-  const {data} = await client.query({query: messagesQuery});
+  const { data } = await client.query({ query: messagesQuery });
   return data.messages;
+}
+
+export async function onMessageAdded(handleMessage) {
+  //subscribe to subscription and oberserve any change to be added
+  const observable = client.subscribe({ query: messageAddedSubscription });
+  // subscribe to this to dispatch message to components
+  return observable.subscribe(({ data }) => {
+    handleMessage(data.messageAdded);
+  });
 }
